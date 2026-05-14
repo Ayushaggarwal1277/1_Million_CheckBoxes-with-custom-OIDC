@@ -94,6 +94,32 @@
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
         }
 
+        .rate-limit-banner {
+            display: none;
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            max-width: min(420px, calc(100vw - 32px));
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 106, 106, 0.45);
+            background: rgba(255, 94, 94, 0.14);
+            color: #ffe1e1;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            z-index: 30;
+        }
+
+        .rate-limit-banner.is-visible {
+            display: block;
+            animation: pop-in 260ms ease-out, blink 1s ease-in-out infinite;
+        }
+
+        .rate-limit-banner.is-hiding {
+            animation: fade-out 220ms ease-in forwards;
+        }
+
         #container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(18px, 1fr));
@@ -137,6 +163,38 @@
             }
         }
 
+        @keyframes pop-in {
+            from {
+                opacity: 0;
+                transform: translateY(-6px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        @keyframes fade-out {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+        }
+
         @media (max-width: 720px) {
             .page {
                 padding: 32px 16px 56px;
@@ -168,6 +226,7 @@
         </header>
 
         <section class="stage">
+            <div id="rate-limit-banner" class="rate-limit-banner" role="status" aria-live="polite"></div>
             <div id="container"></div>
         </section>
 
@@ -178,6 +237,27 @@
     <script>
         
         const socket = io();
+
+        const rateLimitBanner = document.getElementById('rate-limit-banner');
+        let rateLimitTimeout = null;
+
+        socket.on('rate-limiting-error', (errorMessage) => {
+            const eMess = errorMessage?.error || 'Rate limit hit. Slow down and try again.';
+            if (rateLimitBanner) {
+                rateLimitBanner.textContent = eMess;
+                rateLimitBanner.classList.remove('is-hiding');
+                rateLimitBanner.classList.add('is-visible');
+                if (rateLimitTimeout) {
+                    clearTimeout(rateLimitTimeout);
+                }
+                rateLimitTimeout = setTimeout(() => {
+                    rateLimitBanner.classList.add('is-hiding');
+                    rateLimitBanner.classList.remove('is-visible');
+                }, 3500);
+            }
+        })
+
+
         socket.on('server:checkbox-state',(data) => {
             
             const {index,value} = data;
@@ -189,7 +269,11 @@
         
         const container = document.getElementById('container');
 
-        window.addEventListener('load',async() => {
+        const fetchFromBackend = async() => {
+            while(container.firstChild){
+                container.removeChild(container.firstChild);
+            }
+
             const response = await fetch('/checkboxes',{method:'GET'});
             const data = await response.json();
 
@@ -203,11 +287,16 @@
 
                     input.addEventListener('change',(event) => {
                         socket.emit('client:checkboxClicked',{index,value:event.target.checked});
+                        fetchFromBackend();
                     })
 
                     container.appendChild(input);
                 })
             }
+        }
+
+        window.addEventListener('load',async() => {
+            fetchFromBackend();
         })
        
 

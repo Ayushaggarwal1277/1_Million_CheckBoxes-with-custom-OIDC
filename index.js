@@ -7,8 +7,9 @@ import {publisher,subscriber,redis} from './redis-connection.js';
 
 dotenv.config({path:'./.env',quiet:true});
 
-const CHECKBOX_COUNT = 10000 
-const REDIS_KEY = 'checkbox-state'
+const CHECKBOX_COUNT = 100000;
+const REDIS_KEY = 'checkbox-state-v1';
+const RateLimitingHashMap = new Map();
 // const state = {
 //     checkboxes : new Array(CHECKBOX_COUNT).fill(false),
 // }
@@ -46,6 +47,21 @@ async function main(){
             
             console.log('data received',data);
             //io.emit('server:checkbox-state',data);
+
+            const lastOperationTime = RateLimitingHashMap.get(socket.id);
+            if(lastOperationTime){
+
+                if(Date.now() - lastOperationTime < 5*1000){ //5sec
+                    
+                    socket.emit('rate-limiting-error', {error:"Please wait"});
+                    return;
+
+                } 
+
+            }
+            RateLimitingHashMap.set(socket.id,Date.now());
+
+
             const existingKey = await redis.get(REDIS_KEY);
             if(existingKey){
                 const existingData = JSON.parse(existingKey);
