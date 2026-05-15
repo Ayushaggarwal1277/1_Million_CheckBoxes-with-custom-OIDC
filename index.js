@@ -11,7 +11,7 @@ import oidcRoutes from './routes/oidc.routes.js'
 
 dotenv.config({path:'./.env',quiet:true});
 
-const CHECKBOX_COUNT = 1000;
+const CHECKBOX_COUNT = 100000;
 const REDIS_KEY = 'checkbox-state-v2';
 // const RateLimitingHashMap = new Map();
 // const state = {
