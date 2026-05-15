@@ -75,6 +75,44 @@
             color: var(--muted);
         }
 
+        .auth-banner {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(242, 185, 106, 0.35);
+            background: rgba(242, 185, 106, 0.1);
+            color: var(--ink);
+        }
+
+        .auth-banner.is-authenticated {
+            border-color: rgba(94, 155, 255, 0.35);
+            background: rgba(94, 155, 255, 0.12);
+        }
+
+        .auth-banner span {
+            font-size: 0.95rem;
+        }
+
+        .auth-banner button {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--accent);
+            color: #1a1205;
+        }
+
+        .auth-banner .logout {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--ink);
+            border: 1px solid var(--border);
+        }
+
         .pill {
             padding: 6px 12px;
             border-radius: 999px;
@@ -223,6 +261,13 @@
                 <span>Layout: fluid grid</span>
                 <span>Theme: ember dusk</span>
             </div>
+            <div id="auth-banner" class="auth-banner">
+                <span id="auth-status-text">Sign in to start checking boxes.</span>
+                <div>
+                    <button id="login-button" type="button">Sign in</button>
+                    <button id="logout-button" class="logout" type="button" style="display: none;">Sign out</button>
+                </div>
+            </div>
         </header>
 
         <section class="stage">
@@ -237,6 +282,57 @@
     <script>
         
         const socket = io();
+        const CLIENT_ID = "million-checkboxes";
+        const REDIRECT_URI = `${window.location.origin}/`;
+        const AUTH_URL = `/oidc/o/v1/auth?clientId=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+
+        const authBanner = document.getElementById('auth-banner');
+        const authStatusText = document.getElementById('auth-status-text');
+        const loginButton = document.getElementById('login-button');
+        const logoutButton = document.getElementById('logout-button');
+        let currentUser = null;
+
+        const loadStoredUser = () => {
+            try {
+                const raw = localStorage.getItem('mc_user');
+                return raw ? JSON.parse(raw) : null;
+            } catch (error) {
+                return null;
+            }
+        };
+
+        const saveUserFromQuery = () => {
+            const params = new URLSearchParams(window.location.search);
+            const email = params.get('email');
+            if (!email) return false;
+
+            const name = params.get('name') || email;
+            localStorage.setItem('mc_user', JSON.stringify({ email, name }));
+            params.delete('email');
+            params.delete('name');
+            const cleanUrl = params.toString() ? `${window.location.pathname}?${params}` : window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+            return true;
+        };
+
+        const setAuthState = (user) => {
+            currentUser = user;
+            if (user) {
+                authBanner.classList.add('is-authenticated');
+                authStatusText.textContent = `Signed in as ${user.name}`;
+                loginButton.style.display = 'none';
+                logoutButton.style.display = 'inline-flex';
+            } else {
+                authBanner.classList.remove('is-authenticated');
+                authStatusText.textContent = 'Sign in to start checking boxes.';
+                loginButton.style.display = 'inline-flex';
+                logoutButton.style.display = 'none';
+            }
+        };
+
+        const startLogin = () => {
+            window.location.href = AUTH_URL;
+        };
 
         const rateLimitBanner = document.getElementById('rate-limit-banner');
         let rateLimitTimeout = null;
@@ -286,6 +382,11 @@
                     input.checked = serverVal;
 
                     input.addEventListener('change',(event) => {
+                        if (!currentUser) {
+                            event.target.checked = serverVal;
+                            startLogin();
+                            return;
+                        }
                         socket.emit('client:checkboxClicked',{index,value:event.target.checked});
                         fetchFromBackend();
                     })
@@ -295,7 +396,18 @@
             }
         }
 
+        loginButton.addEventListener('click', startLogin);
+        logoutButton.addEventListener('click', () => {
+            localStorage.removeItem('mc_user');
+            setAuthState(null);
+        });
+
         window.addEventListener('load',async() => {
+            if (saveUserFromQuery()) {
+                setAuthState(loadStoredUser());
+            } else {
+                setAuthState(loadStoredUser());
+            }
             fetchFromBackend();
         })
        

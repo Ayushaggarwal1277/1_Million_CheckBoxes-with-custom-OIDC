@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Auth</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--bg: #0f1b2b;
+				--bg-2: #101828;
+				--ink: #f7f7f2;
+				--muted: #b7c0cc;
+				--accent: #f7b955;
+				--accent-2: #35c9c1;
+				--card: #162235;
+				--border: #2b3a53;
+				--shadow: 0 30px 80px rgba(3, 10, 20, 0.55);
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				min-height: 100vh;
+				font-family: "Space Grotesk", "Segoe UI", sans-serif;
+				color: var(--ink);
+				background:
+					radial-gradient(1100px 600px at 15% 10%, rgba(53, 201, 193, 0.18), transparent 60%),
+					radial-gradient(900px 600px at 90% 10%, rgba(247, 185, 85, 0.18), transparent 55%),
+					linear-gradient(160deg, var(--bg), var(--bg-2));
+				display: grid;
+				place-items: center;
+				padding: 32px 16px;
+			}
+
+			.auth-shell {
+				width: min(980px, 100%);
+				display: grid;
+				grid-template-columns: 1.15fr 1fr;
+				gap: 28px;
+				align-items: stretch;
+			}
+
+			.brand-panel {
+				background: linear-gradient(140deg, rgba(53, 201, 193, 0.14), rgba(247, 185, 85, 0.12));
+				border: 1px solid var(--border);
+				border-radius: 24px;
+				padding: 40px;
+				box-shadow: var(--shadow);
+				position: relative;
+				overflow: hidden;
+			}
+
+			.brand-panel::after {
+				content: "";
+				position: absolute;
+				inset: 12px;
+				border: 1px dashed rgba(255, 255, 255, 0.12);
+				border-radius: 18px;
+				pointer-events: none;
+			}
+
+			.brand-panel h1 {
+				font-family: "Fraunces", serif;
+				font-weight: 700;
+				font-size: clamp(2rem, 2.6vw, 3rem);
+				margin: 0 0 16px;
+			}
+
+			.brand-panel p {
+				margin: 0 0 28px;
+				color: var(--muted);
+				line-height: 1.5;
+			}
+
+			.brand-badges {
+				display: grid;
+				gap: 14px;
+			}
+
+			.badge {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				padding: 12px 14px;
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 14px;
+				background: rgba(15, 27, 43, 0.6);
+				font-size: 0.95rem;
+			}
+
+			.dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				background: var(--accent-2);
+				box-shadow: 0 0 10px rgba(53, 201, 193, 0.6);
+			}
+
+			.auth-card {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 24px;
+				padding: 28px;
+				box-shadow: var(--shadow);
+				display: grid;
+				gap: 20px;
+			}
+
+			.switcher {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				padding: 6px;
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.05);
+				border: 1px solid var(--border);
+			}
+
+			.switcher button {
+				border: none;
+				padding: 10px 14px;
+				border-radius: 999px;
+				background: transparent;
+				color: var(--muted);
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 200ms ease;
+			}
+
+			.switcher button.active {
+				background: linear-gradient(130deg, var(--accent), var(--accent-2));
+				color: #0d0e0f;
+				box-shadow: 0 10px 25px rgba(53, 201, 193, 0.25);
+			}
+
+			form {
+				display: grid;
+				gap: 14px;
+			}
+
+			.field {
+				display: grid;
+				gap: 6px;
+			}
+
+			label {
+				font-size: 0.85rem;
+				color: var(--muted);
+			}
+
+			input {
+				padding: 12px 14px;
+				border-radius: 12px;
+				border: 1px solid var(--border);
+				background: rgba(10, 18, 30, 0.7);
+				color: var(--ink);
+				font-size: 0.95rem;
+			}
+
+			input:focus {
+				outline: 2px solid rgba(53, 201, 193, 0.4);
+				border-color: rgba(53, 201, 193, 0.5);
+			}
+
+			.submit {
+				padding: 12px 16px;
+				border-radius: 12px;
+				border: none;
+				font-weight: 700;
+				cursor: pointer;
+				background: linear-gradient(120deg, var(--accent), var(--accent-2));
+				color: #0f1b2b;
+				transition: transform 160ms ease;
+			}
+
+			.submit:hover {
+				transform: translateY(-1px);
+			}
+
+			.divider {
+				display: grid;
+				grid-template-columns: 1fr auto 1fr;
+				align-items: center;
+				gap: 12px;
+				color: var(--muted);
+				font-size: 0.85rem;
+			}
+
+			.divider span {
+				height: 1px;
+				background: var(--border);
+			}
+
+			.ghost-row {
+				display: grid;
+				gap: 10px;
+			}
+
+			.ghost-btn {
+				padding: 10px 12px;
+				border-radius: 12px;
+				border: 1px solid var(--border);
+				background: rgba(255, 255, 255, 0.04);
+				color: var(--ink);
+				cursor: pointer;
+				font-weight: 600;
+			}
+
+			.hint {
+				color: var(--muted);
+				font-size: 0.85rem;
+			}
+
+			.hint.error {
+				color: #ffb0b0;
+			}
+
+			.hidden {
+				display: none;
+			}
+
+			@media (max-width: 860px) {
+				.auth-shell {
+					grid-template-columns: 1fr;
+				}
+
+				.brand-panel {
+					padding: 28px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<main class="auth-shell">
+			<section class="brand-panel">
+				<h1>Welcome to Chai Auth</h1>
+				<p>
+					Secure your workspace with a calm, fast login flow. Choose the
+					experience that fits your day, then keep moving.
+				</p>
+				<div class="brand-badges">
+					<div class="badge"><span class="dot"></span> Passwords are hashed & salted</div>
+					<div class="badge"><span class="dot"></span> Session tokens rotate hourly</div>
+					<div class="badge"><span class="dot"></span> No noise, just access</div>
+				</div>
+			</section>
+
+			<section class="auth-card">
+				<div class="switcher" role="tablist" aria-label="Auth tabs">
+					<button class="active" data-tab="signup" role="tab">Sign up</button>
+					<button data-tab="signin" role="tab">Sign in</button>
+				</div>
+				<p id="auth-status" class="hint" role="status" aria-live="polite"></p>
+
+				<form id="signup" autocomplete="on" method="post">
+					<div class="field">
+						<label for="signup-first-name">First name</label>
+						<input id="signup-first-name" name="firstName" placeholder="Abc" />
+					</div>
+					<div class="field">
+						<label for="signup-last-name">Last name</label>
+						<input id="signup-last-name" name="lastName" placeholder="xyz" />
+					</div>
+					<div class="field">
+						<label for="signup-email">Email</label>
+						<input id="signup-email" name="email" type="email" placeholder="chai@studio.com" />
+					</div>
+					<div class="field">
+						<label for="signup-password">Password</label>
+						<input id="signup-password" name="password" type="password" placeholder="Create a strong password" />
+					</div>
+					<button class="submit" type="submit">Create account</button>
+					<div class="divider"><span></span>or<span></span></div>
+					<div class="ghost-row">
+						<button class="ghost-btn" type="button">Continue with GitHub</button>
+						<button class="ghost-btn" type="button">Continue with Google</button>
+					</div>
+					<p class="hint">By creating an account, you agree to the terms.</p>
+				</form>
+
+				<form id="signin" class="hidden" autocomplete="on" method="post">
+					<div class="field">
+						<label for="signin-email">Email</label>
+						<input id="signin-email" name="email" type="email" placeholder="chai@studio.com" />
+					</div>
+					<div class="field">
+						<label for="signin-password">Password</label>
+						<input id="signin-password" name="password" type="password" placeholder="Your password" />
+					</div>
+					<button class="submit" type="submit">Sign in</button>
+					<div class="divider"><span></span>or<span></span></div>
+					<div class="ghost-row">
+						<button class="ghost-btn" type="button">Use magic link</button>
+						<button class="ghost-btn" type="button">Continue with SSO</button>
+					</div>
+					<p class="hint">Forgot your password? Reset in one tap.</p>
+				</form>
+			</section>
+		</main>
+
+		<script>
+			const buttons = document.querySelectorAll(".switcher button");
+			const forms = document.querySelectorAll("form");
+			const signupForm = document.getElementById("signup");
+			const signinForm = document.getElementById("signin");
+			const status = document.getElementById("auth-status");
+
+			const CLIENT_SECRET = "ayush101";
+			const params = new URLSearchParams(window.location.search);
+			const clientId = params.get("clientId") || params.get("client_id") || "";
+			const redirectUri = params.get("redirect_uri") || `${window.location.origin}/`;
+
+			signupForm.action = "/oidc/signup";
+			signinForm.action = `/oidc/signin?clientId=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+			const setStatus = (message, isError = false) => {
+				status.textContent = message;
+				status.classList.toggle("error", isError);
+			};
+
+			const setActive = (target) => {
+				buttons.forEach((button) => {
+					const isActive = button.dataset.tab === target;
+					button.classList.toggle("active", isActive);
+				});
+
+				forms.forEach((form) => {
+					form.classList.toggle("hidden", form.id !== target);
+				});
+			};
+
+			const readForm = (form) => {
+				const data = new FormData(form);
+				return Object.fromEntries(data.entries());
+			};
+
+			signupForm.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				setStatus("Creating account...");
+				try {
+					const payload = readForm(signupForm);
+					const response = await fetch("/oidc/signup", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(payload),
+					});
+
+					if (!response.ok) {
+						const data = await response.json().catch(() => ({}));
+						setStatus(data.message || data.error || "Signup failed.", true);
+						return;
+					}
+
+					setStatus("Account created. Please sign in.");
+					setActive("signin");
+				} catch (error) {
+					setStatus("Signup failed. Please try again.", true);
+				}
+			});
+
+			signinForm.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				if (!clientId) {
+					setStatus("Missing client id.", true);
+					return;
+				}
+				setStatus("Signing in...");
+				try {
+					const payload = readForm(signinForm);
+					const signinUrl = `/oidc/signin?clientId=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+					const signinResponse = await fetch(signinUrl, {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(payload),
+					});
+
+					if (!signinResponse.ok) {
+						const data = await signinResponse.json().catch(() => ({}));
+						setStatus(data.error || "Sign in failed.", true);
+						return;
+					}
+
+					const { code } = await signinResponse.json();
+					const tokenUrl = `/oidc/token?code=${encodeURIComponent(code)}&clientId=${encodeURIComponent(clientId)}&clientSecret=${encodeURIComponent(CLIENT_SECRET)}`;
+					const tokenResponse = await fetch(tokenUrl);
+
+					if (!tokenResponse.ok) {
+						const data = await tokenResponse.json().catch(() => ({}));
+						setStatus(data.error || "Token exchange failed.", true);
+						return;
+					}
+
+					const { token } = await tokenResponse.json();
+					const userInfoUrl = `/oidc/o/userinfo?token=${encodeURIComponent(token)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+					window.location.href = userInfoUrl;
+				} catch (error) {
+					setStatus("Sign in failed. Please try again.", true);
+				}
+			});
+
+			buttons.forEach((button) => {
+				button.addEventListener("click", () => setActive(button.dataset.tab));
+			});
+
+			if (clientId) {
+				setActive("signin");
+			}
+		</script>
+	</body>
+</html>

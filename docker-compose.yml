@@ -4,3 +4,22 @@ services:
     container_name: valkey-server
     ports:
       - "6379:6379"
+
+  postgres:
+    image: postgres:16
+    container_name: postgres-server
+    restart: always
+
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: oidc_auth
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
