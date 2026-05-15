@@ -230,7 +230,7 @@ const userController = async(req,res) => {
         // fetch public key from the endpoint /o/key and then verify the token and then return the email in query and then redirect to the redirect uri with email in query
         // public key is at /o/key endpoint
 
-        const publicKeyResponse = await fetch(`${req.protocol}://${req.get('host')}/o/key`);
+        const publicKeyResponse = await fetch(`${req.protocol}://${req.get('host')}/oidc/o/key`);
         const {keys} = await publicKeyResponse.json();
         const publicKeyfetched = await jose.importJWK(keys[0], 'RS256');
 
@@ -245,7 +245,10 @@ const userController = async(req,res) => {
         if(!existing){
             return res.status(400).json({error:"User not found"});
         }
-        res.cookie("mc_token", token, {
+        const host = req.get("host") || "";
+        const port = host.split(":")[1] || "80";
+        const cookieName = `mc_token_${port}`;
+        res.cookie(cookieName, token, {
             httpOnly: true,
             sameSite: "lax",
             maxAge: 60 * 60 * 1000,

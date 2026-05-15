@@ -58,9 +58,10 @@ async function main(){
             }, {});
     };
 
-    const getUserFromCookie = async (cookieHeader) => {
+    const getUserFromCookie = async (cookieHeader, hostHeader = "") => {
         const cookies = parseCookies(cookieHeader);
-        const token = cookies.mc_token;
+        const port = hostHeader.split(":")[1] || "80";
+        const token = cookies[`mc_token_${port}`];
         if (!token) return null;
 
         try {
@@ -75,7 +76,10 @@ async function main(){
         console.log(`Socket with socket id ${socket.id} is connected`);
 
         socket.on('client:checkboxClicked',async (data) => {
-            const user = await getUserFromCookie(socket.handshake.headers.cookie);
+            const user = await getUserFromCookie(
+                socket.handshake.headers.cookie,
+                socket.handshake.headers.host || ""
+            );
             if (!user) {
                 socket.emit('rate-limiting-error', {error:"Please sign in to continue."});
                 return;
@@ -115,7 +119,7 @@ async function main(){
     })
 
     app.get('/checkboxes',async (req,res) => {
-        const user = await getUserFromCookie(req.headers.cookie);
+        const user = await getUserFromCookie(req.headers.cookie, req.headers.host || "");
         if (!user) {
             return res.status(401).json({ error: "Unauthorized" });
         }
