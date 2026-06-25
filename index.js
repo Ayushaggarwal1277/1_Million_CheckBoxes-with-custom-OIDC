@@ -32,7 +32,7 @@ async function main(){
     io.attach(server);
 
     app.use(express.static('public'));
-    //app.use(express.json());
+    app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
 
@@ -149,7 +149,7 @@ async function main(){
 
     app.use('/oidc',oidcRoutes);
 
-
+    
 }
 
 main();
