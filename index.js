@@ -12,7 +12,7 @@ import oidcRoutes from './routes/oidc.routes.js'
 dotenv.config({path:'./.env',quiet:true});
 
 const CHECKBOX_COUNT = 100000;
-const REDIS_KEY = 'checkbox-state-v2';
+const REDIS_KEY = 'checkbox-state-v1';
 // const RateLimitingHashMap = new Map();
 // const state = {
 //     checkboxes : new Array(CHECKBOX_COUNT).fill(false),
@@ -42,6 +42,7 @@ async function main(){
             const {index,value} = JSON.parse(data);
             // state.checkboxes[index] = value;
             io.emit('server:checkbox-state',JSON.parse(data));
+            console.log(`Checkbox at index ${index} updated to ${value}`);
         }
 
     })
