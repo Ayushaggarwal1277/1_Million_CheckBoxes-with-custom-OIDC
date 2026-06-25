@@ -29,10 +29,10 @@ async function main(){
     const server = http.createServer(app);
 
     const io = new Server();
-    io.attach();
+    io.attach(server);
 
     app.use(express.static('public'));
-    app.use(express.json());
+    //app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
 
