@@ -29,7 +29,7 @@ async function main(){
     const server = http.createServer(app);
 
     const io = new Server();
-    io.attach(server);
+    io.attach();
 
     app.use(express.static('public'));
     app.use(express.json());
